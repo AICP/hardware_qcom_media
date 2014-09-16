@@ -9713,6 +9713,7 @@ OMX_BUFFERHEADERTYPE* omx_vdec::allocate_color_convert_buf::get_il_buf_hdr()
             status = c2d.convert(omx->drv_ctx.ptr_outputbuffer[index].pmem_fd,
                     omx->m_out_mem_ptr->pBuffer, bufadd->pBuffer, pmem_fd[index],
                     pmem_baseaddress[index], pmem_baseaddress[index]);
+            pthread_mutex_unlock(&omx->c_lock);
             if (!status) {
                 DEBUG_PRINT_ERROR("Failed color conversion %d", status);
                 m_out_mem_ptr_client[index].nFilledLen = 0;
