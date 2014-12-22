@@ -7038,6 +7038,7 @@ int omx_vdec::async_message_process (void *context, void* message)
                         omx->m_queued_codec_config_count);
                     sem_post(&omx->m_safe_flush);
                 }
+                DEBUG_PRINT_LOW("Reset codec_config buffer counter");
                 android_atomic_and(0, &omx->m_queued_codec_config_count); /* no clearer way to set to 0 */
             }
 
