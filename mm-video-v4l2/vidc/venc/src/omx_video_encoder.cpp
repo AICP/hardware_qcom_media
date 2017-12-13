@@ -2020,6 +2020,7 @@ OMX_ERRORTYPE  omx_venc::set_config(OMX_IN OMX_HANDLETYPE      hComp,
                     } else {
                         m_sParamAVC.nPFrames = pParam->nPFrames;
                         if ((m_sParamAVC.eProfile != OMX_VIDEO_AVCProfileBaseline) &&
+                            (m_sParamAVC.eProfile != (OMX_VIDEO_AVCPROFILETYPE) OMX_VIDEO_AVCProfileConstrainedBaseline) &&
                             (m_sParamAVC.eProfile != (OMX_VIDEO_AVCPROFILETYPE) QOMX_VIDEO_AVCProfileConstrainedBaseline))
                             m_sParamAVC.nBFrames = pParam->nBFrames;
                         else
@@ -2496,12 +2497,6 @@ OMX_U32 omx_venc::dev_start_done(void)
 OMX_U32 omx_venc::dev_set_message_thread_id(pthread_t tid)
 {
     return handle->venc_set_message_thread_id(tid);
-}
-
-OMX_U32 omx_venc::dev_handle_empty_eos_buffer(void)
-{
-    // do nothing in hw component
-    return 1;
 }
 
 bool omx_venc::dev_use_buf(void *buf_addr,unsigned port,unsigned index)

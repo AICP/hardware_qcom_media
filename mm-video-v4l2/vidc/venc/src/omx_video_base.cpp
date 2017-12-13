@@ -3953,22 +3953,6 @@ OMX_ERRORTYPE  omx_video::empty_this_buffer_proxy(OMX_IN OMX_HANDLETYPE  hComp,
         }
     }
 
-    if (buffer->nFilledLen == 0 && (buffer->nFlags & OMX_BUFFERFLAG_EOS)) {
-        DEBUG_PRINT_LOW("Zero length EOS buffer");
-        OMX_U32 ret = dev_handle_empty_eos_buffer();
-        /*
-         * 0 - succeeded in sw compoent
-         * 1 - did nothing in hw component
-         * 2 - failed in sw component
-         */
-        if (ret == 2)
-            return OMX_ErrorHardware;
-        else if(ret == 0) {
-            post_event((unsigned long)buffer, 0, OMX_COMPONENT_GENERATE_EBD);
-            return OMX_ErrorNone;
-        }
-    }
-
     pending_input_buffers++;
     VIDC_TRACE_INT_LOW("ETB-pending", pending_input_buffers);
     if (input_flush_progress == true) {
@@ -4795,8 +4779,12 @@ OMX_ERRORTYPE omx_video::get_supported_profile_level(OMX_VIDEO_PARAM_PROFILELEVE
             } else if (profileLevelType->nProfileIndex == 2) {
                 profileLevelType->eProfile = OMX_VIDEO_AVCProfileHigh;
             } else if (profileLevelType->nProfileIndex == 3) {
-                profileLevelType->eProfile = QOMX_VIDEO_AVCProfileConstrainedBaseline;
+                profileLevelType->eProfile = OMX_VIDEO_AVCProfileConstrainedBaseline;
             } else if (profileLevelType->nProfileIndex == 4) {
+                profileLevelType->eProfile = QOMX_VIDEO_AVCProfileConstrainedBaseline;
+            } else if (profileLevelType->nProfileIndex == 5) {
+                profileLevelType->eProfile = OMX_VIDEO_AVCProfileConstrainedHigh;
+            } else if (profileLevelType->nProfileIndex == 6) {
                 profileLevelType->eProfile = QOMX_VIDEO_AVCProfileConstrainedHigh;
             } else {
                 DEBUG_PRINT_LOW("get_parameter: OMX_IndexParamVideoProfileLevelQuerySupported nProfileIndex ret NoMore %u",
@@ -4890,7 +4878,17 @@ int omx_video::alloc_map_ion_memory(int size,
     } else {
         alloc_data->len = (size + (SZ_4K - 1)) & ~(SZ_4K - 1);
         alloc_data->align = SZ_4K;
-        alloc_data->flags = (flag & ION_FLAG_CACHED ? ION_FLAG_CACHED : 0);
+        alloc_data->flags = (flag & ION_FLAG_CACHED);
+
+        /* If color format is Vanilla NV12, we will need to use caching for optimal
+           color alignment performance.
+         */
+
+        if (m_sInPortDef.format.video.eColorFormat == OMX_COLOR_FormatYUV420SemiPlanar)
+        {
+            DEBUG_PRINT_HIGH("Enabling cacheing for this buffer");
+            alloc_data->flags = ION_FLAG_CACHED;
+        }
 #ifdef MAX_RES_720P
         alloc_data->heap_id_mask = ION_HEAP(MEM_HEAP_ID);
 #else
